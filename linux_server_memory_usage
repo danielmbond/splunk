@@ -1,0 +1,269 @@
+<form>
+  <label>Linux Server Memory Usages</label>
+  <description>Provides detail view of Memory usage of a VM</description>
+  <fieldset submitButton="true">
+    <input type="time" token="time_token">
+    <label></label>
+    <default>
+      <earliest>-1d@d</earliest>
+      <latest>now</latest>
+    </default>
+    </input>
+    <input type="text" token="host_token">
+    <label>Host</label>
+    <default>lx02012</default>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+     <html>
+        <style>.btn-primary { margin: 5px 10px 5px 0; }</style>
+        <a href="linux_server_cpu_usages?form.host_token=$host_token$" target="_self"
+        class="btn btn-primary">CPU</a>
+		<a href="linux_server_memory_usage?form.host_token=$host_token$" target="_self"
+        class="btn btn-primary">Memory</a>
+        <a href="linux_server_disk_usage?form.host_token=$host_token$" target="_self"
+        class="btn btn-primary">Disk</a>  	
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <title>Last 1 hour Memory Usage</title>
+        <search>
+          <query>earliest="-1h@h" latest="now" index=log-lx-prod host=$host_token$* sourcetype=vmstat|eval host= mvindex(split(host,"."),0)| fields _time,host, memUsedPct| stats avg(memUsedPct) as avgmem, sparkline(avg(memUsedPct),1s) as memtrend | eval avgmem=round(avgmem,2)."%"</query>
+          <earliest>0</earliest>
+          <latest></latest>
+        </search>
+        <option name="wrap">true</option>
+        <option name="rowNumbers">false</option>
+        <option name="drilldown">none</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="count">10</option>
+      </table>
+      <chart>
+        <title>Current Memory Usage</title>
+        <search>
+          <query>earliest="-1h@h" latest="now" index=log-lx-prod host=$host_token$* sourcetype=vmstat|eval host= mvindex(split(host,"."),0)| fields _time,host, memUsedMB,memTotalMB,memFreeMB,memUsedPct| eval TotalMemGB=round(memTotalMB/1024,1), FeeMemGB=round(memFreeMB/1024,1),UsedMemGB=round(memUsedMB/1024,1)| timechart span=1m max(TotalMemGB) as TotalMemGB,max(UsedMemGB) as UsedMemGB, max(memUsedPct) as "%memUsed"</query>
+          <earliest>0</earliest>
+          <latest></latest>
+        </search>
+        <option name="charting.chart">area</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.enabled">1</option>
+        <option name="charting.axisY2.scale">linear</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">all</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.placement">top</option>
+        <option name="charting.chart.overlayFields">%memUsed</option>
+        <option name="charting.axisTitleY2.text">%Mem</option>
+        <option name="charting.axisLabelsY2.majorUnit">2</option>
+        <option name="charting.axisY2.minimumNumber">5</option>
+        <option name="charting.axisY2.maximumNumber">100</option>
+      </chart>
+      <chart>
+        <title>Current memory paging stats</title>
+        <search>
+          <query>earliest="-1h@h" latest="now" index=log-lx-prod host=$host_token$* sourcetype=vmstat|eval host= mvindex(split(host,"."),0)| fields _time,host, pgPageOut,swapUsedPct, pgSwapOut| delta pgPageOut as Mempageout| eval Mempageout=Mempageout*-1 |delta pgSwapOut as swappag| timechart span=1m max(swapUsedPct) as "%usedswap", max(Mempageout) as Mempageout, max(swappag) as swappag</query>
+          <earliest>0</earliest>
+          <latest></latest>
+        </search>
+        <option name="charting.chart">line</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.scale">log</option>
+        <option name="charting.axisY2.enabled">1</option>
+        <option name="charting.axisY2.scale">linear</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.overlayFields">%usedswap</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">all</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.placement">top</option>
+        <option name="charting.axisLabelsY2.majorUnit">.01</option>
+        <option name="charting.axisY2.minimumNumber">0</option>
+        <option name="charting.axisY2.maximumNumber">25</option>
+      </chart>
+    </panel>
+    <panel>
+      <chart>
+        <title>Current #Process and #Thread vs CPUload</title>
+        <search>
+          <query>earliest=-1h@h latest=now index=log-lx-prod host=$host_token$* sourcetype=vmstat| bucket _time span=1m | stats max(processes) as #Process,max(threads) as #Thread,max(loadAvg1mi) as CPUload by _time</query>
+          <earliest>0</earliest>
+          <latest></latest>
+        </search>
+        <option name="charting.chart">line</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">all</option>
+        <option name="charting.layout.splitSeries">1</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">1</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.placement">right</option>
+      </chart>
+      <chart>
+        <title>Process stats</title>
+        <search>
+          <query>earliest="-1h@h" latest="now" index=log-lx-prod host=$host_token$* sourcetype=vmstat|eval host= mvindex(split(host,"."),0)| fields _time,host, cSwitches,interrupts, forks| delta cSwitches as cSwitches| eval cSwitches=cSwitches*-1 |delta interrupts as interrupts|eval interrupts=interrupts*-1| delta forks as forks|eval forks=forks*-1| timechart span=1m max(cSwitches) as cSwitches, max(interrupts) as interrupts, max(forks) as forks</query>
+          <earliest>0</earliest>
+          <latest></latest>
+        </search>
+        <option name="charting.chart">line</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">all</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.placement">top</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <input type="text" token="span2" searchWhenChanged="true">
+      <label>Set Granularity(minutes)</label>
+      <default>5</default>
+      </input>
+      <chart>
+        <title>Memory usgaes for host $host_token$</title>
+        <search>
+          <query>earliest="$time_token.earliest$" latest="$time_token.latest$" index=log-lx-prod host=$host_token$* sourcetype=vmstat |eval host= mvindex(split(host,"."),0) | fields memUsedPct,host reportkey | timechart span=$span2$m avg(memUsedPct) as avgmem, perc95(memUsedPct) as 95PCT</query>
+          <earliest>0</earliest>
+        </search>
+        <option name="charting.chart">column</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.layout.splitSeries">1</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.placement">top</option>
+        <drilldown>
+          <unset token="host"></unset>
+          <set token="host" suffix="*">$click.name2$</set>
+          <set token="showtrend">OK</set>
+        </drilldown>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <input type="dropdown" token="Agg_token" searchWhenChanged="true">
+      <label>Aggregation</label>
+      <choice value="avg">Average</choice>
+      <choice value="max">Maximum</choice>
+      <choice value="mean">Mean</choice>
+      <choice value="perc95">95th Percentile</choice>
+      <default>avg</default>
+      </input>
+      <chart>
+        <title>Last 7 days Average Memory Usages of $host_token$</title>
+        <search>
+          <query>earliest="-6d@d" latest=now  index=log-lx-prod host=$host_token$* sourcetype=vmstat |eval host= mvindex(split(host,"."),0)| eval  reportkey= strftime(_time,"%a")| fields memUsedPct, reportkey              |eval hourmin = substr(strftime(_time,"%H:%M"),0,4)."0"  | chart $Agg_token$(memUsedPct) as MemUsed by hourmin, reportkey</query>
+          <earliest>0</earliest>
+        </search>
+        <option name="charting.chart">line</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.placement">top</option>
+        <option name="charting.axisTitleX.text">Hr:Mi</option>
+        <option name="charting.axisTitleY.text">% memory used</option>
+      </chart>
+    </panel>
+  </row>
+</form>
