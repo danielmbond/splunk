@@ -1,0 +1,208 @@
+<form>
+  <label>Server CPU Usages</label>
+  <description>Provides detail view of CPU usage of a VM</description>
+  <fieldset submitButton="true">
+    <input type="time" token="time_token">
+      <label></label>
+      <default>
+        <earliest>-1d@d</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+    <input type="text" token="host_token">
+      <label>Host</label>
+      <default>lx00001</default>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <html>
+        <style>.btn-primary { margin: 5px 10px 5px 0; }</style>
+        <a href="linux_server_cpu_usages?form.host_token=$host_token$" target="_self" class="btn btn-primary">CPU</a>
+		    <a href="linux_server_memory_usage?form.host_token=$host_token$" target="_self" class="btn btn-primary">Memory</a>
+        <a href="linux_server_disk_usage?form.host_token=$host_token$" target="_self" class="btn btn-primary">Disk</a>  	
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <title>Last 1 hour CPU usage by core</title>
+        <search>
+          <query>earliest="-1h@h" latest="now" index=log-lx-prod host=$host_token$* sourcetype=cpu | eval host= mvindex(split(host,"."),0) | eval cpupct=100-pctIdle | fields _time,host,cpu,cpupct | stats avg(cpupct) as avgcpu, sparkline(avg(cpupct),1s) as cputrend by cpu | eval avgcpu=round(avgcpu,2) | eval avgcpu=avgcpu."%"| sort by cpu desc</query>
+          <earliest>0</earliest>
+          <latest></latest>
+          <progress>
+            <condition match="'job.resultCount' &gt; 1">
+              <set token="host">*</set>
+            </condition>
+          </progress>
+        </search>
+        <option name="wrap">true</option>
+        <option name="rowNumbers">false</option>
+        <option name="drilldown">none</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="count">10</option>
+        <option name="height">20</option>
+      </table>
+    </panel>
+    <panel>
+      <chart>
+        <title>Last 1 hour CPU usages by activity</title>
+        <search>
+          <query>earliest=-1h@h latest=now index=log-lx-prod host=$host_token$* sourcetype=cpu CPU=all | eval host= mvindex(split(host,"."),0) | eval cpupct=100-pctIdle | timechart span=15s avg(cpupct) as TotalCPUusage, avg(pctIowait) as IOwait, avg(pctUser) as User,avg(pctSystem) as System,avg(pctNice) as CPUtimeusedbylowpriority</query>
+          <earliest>0</earliest>
+          <latest></latest>
+        </search>
+        <option name="wrap">undefined</option>
+        <option name="rowNumbers">undefined</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">line</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">connect</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">all</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.placement">top</option>
+      </chart>
+    </panel>
+    <panel>
+      <chart>
+        <title>#Process and #Threads vs CPUload</title>
+        <search>
+          <query>earliest=-1h@h latest=now index=log-lx-prod host=$host_token$* sourcetype=vmstat | bucket _time span=1m | stats max(processes) as #Process,max(threads) as #Thread,max(loadAvg1mi) as CPUload by _time</query>
+          <earliest>0</earliest>
+          <latest></latest>
+        </search>
+        <option name="charting.chart">line</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">collapsed</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">all</option>
+        <option name="charting.layout.splitSeries">1</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">1</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.placement">top</option>
+        <option name="charting.chart.overlayFields">CPUload</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <input type="text" token="span1" searchWhenChanged="true">
+        <label>Set Granularity(minutes)</label>
+        <default>5</default>
+      </input>
+      <chart>
+        <title>CPU usgaes for host $host_token$</title>
+        <search>
+          <query>earliest="$time_token.earliest$" latest="$time_token.latest$" index=log-lx-prod host=$host_token$* sourcetype=cpu CPU=all | eval host= mvindex(split(host,"."),0) |eval cpupct=100-pctIdle | timechart span=$span1$m  avg(cpupct) as average, perc95(cpupct) as CPU95pcttime</query>
+          <earliest>0</earliest>
+          <latest></latest>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.maximumNumber">100</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">line</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.placement">top</option>
+        <drilldown>
+          <unset token="host"></unset>
+          <set token="host" suffix="*">$click.name2$</set>
+          <set token="showtrend">OK</set>
+        </drilldown>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <input type="dropdown" token="Agg_token" searchWhenChanged="true">
+        <label>Aggregation</label>
+        <choice value="avg">Average</choice>
+        <choice value="mean">Mean</choice>
+        <choice value="max">Maximum</choice>
+        <choice value="perc95">95th Percentile</choice>
+        <default>perc95</default>
+      </input>
+      <chart>
+        <title>Last 7 Days Trend CPU usages of host $host_token$</title>
+        <search>
+          <query>earliest="-6d@d" latest=now index=log-lx-prod host=$host_token$* sourcetype=cpu CPU=all | eval host= mvindex(split(host,"."),0) | eval cpupct=100-pctIdle| eval reportkey= strftime(_time,"%a") | eval hourmin = substr(strftime(_time,"%H:%M"),0,4)."0" | chart $Agg_token$(cpupct) by hourmin,reportkey</query>
+          <earliest>0</earliest>
+          <latest></latest>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.maximumNumber">100</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">line</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.placement">top</option>
+      </chart>
+    </panel>
+  </row>
+</form>
