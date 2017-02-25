@@ -1,0 +1,81 @@
+<form>
+  <label>Linux Server Disk Usages</label>
+  <fieldset submitButton="true">
+    <input type="time" token="time_token" searchWhenChanged="true">
+      <label>Time Period</label>
+      <default>
+        <earliest>-30d@d</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+    <input type="text" token="host_token" searchWhenChanged="false">
+      <label>Server Name</label>
+      <default>lx00001</default>
+      <suffix></suffix>
+    </input>
+    <input type="text" token="mount_token" searchWhenChanged="true">
+      <label>Mount</label>
+      <default>/</default>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+     <html>
+        <style>.btn-primary { margin: 5px 10px 5px 0; }</style>
+        <a href="linux_server_cpu_usages?form.host_token=$host_token$*" target="_self"
+        class="btn btn-primary">CPU</a>
+		<a href="linux_server_memory_usage?form.host_token=$host_token$*" target="_self"
+        class="btn btn-primary">Memory</a>
+        <a href="linux_server_disk_usage?form.host_token=$host_token$*" target="_self"
+        class="btn btn-primary">Disk</a>  	
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <title>All Mounts</title>
+        <search>
+          <query>index="log-lx-prod" sourcetype=df host=$host_token$* storage_free_percent&lt;90 earliest=-60m| rex field=host mode=sed "s/\..*\..*//g"|search NOT nfs NOT *cdrom* | dedup host, mount | sort storage_free_percent | eval "Storage Used" = (100-storage_free_percent) | eval Server= host."-".mount|table  Server, "Storage Used"</query>
+          <earliest>$time_token.earliest$</earliest>
+          <latest>$time_token.latest$</latest>
+        </search>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <chart>
+        <title>$mount_token$</title>
+        <search>
+          <query>index= log-lx-prod sourcetype=df mount=$mount_token$ host=$host_token$* | eval host=mvindex(split(host,"."),0) | timechart span=2h max(storage_used_percent) as Used | predict Used AS PredictUsed</query>
+          <earliest>$time_token.earliest$</earliest>
+          <latest>$time_token.latest$</latest>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">line</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">all</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.placement">right</option>
+      </chart>
+    </panel>
+  </row>
+</form>
