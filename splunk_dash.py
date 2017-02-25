@@ -20,7 +20,7 @@ panel = """\
 top = """\
 <dashboard>
   <label>Host Health Summary</label>
-  <description>https://starbucks.splunkcloud.com/en-US/app/search/oracle_ebs/edit#</description>
+  <description>https://github.com/danielmbond/splunk/tree/master</description>
   <row>
     <panel>
       <html>
@@ -209,4 +209,3 @@ if len(disk2lines) > 0:
 top = top.replace("MOUNT1",mount1).replace("MOUNT2",mount2)
 
 print(top,cpulines,panel,memlines,panel,disk1lines,panel,disk2lines,bottom)
-
