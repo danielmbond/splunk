@@ -1,7 +1,5 @@
 #Create a splunk dashboard using UNIX TA
 index = "log-lx-prod" #set this to your index name
-mount1 = "/" #set this to whatever you like
-mount2 = "/srv/" #set this to whatever you like or delete it
 
 cpulines = []
 memlines = []
@@ -20,7 +18,7 @@ panel = """\
 top = """\
 <dashboard>
   <label>Host Health Summary</label>
-  <description>https://github.com/danielmbond/splunk/tree/master</description>
+  <description>https://github.com/danielmbond/splunk/</description>
   <row>
     <panel>
       <html>
@@ -134,7 +132,7 @@ mem = """\
         <option name="refresh.display">none</option>
       </viz>\
 """
-disk = """\
+disk1 = """\
       <html>
         <a href="linux_server_disk_usage?form.time_token.earliest=-7d%40d&amp;form.time_token.latest=now&amp;form.host_token=LINUXSERVERNAME" target="Host disk">
         <b style="color:blue;text-decoration:none;text-align:left;font-size:10px;">LINUXSERVERNAME</b> 
@@ -142,7 +140,44 @@ disk = """\
       </html>
       <viz type="cuviz_water_gauge.water_gauge">
         <search>
-          <query>earliest=-4h latest=now index=log-lx-prod (host=LINUXSERVERNAME*) sourcetype=df mount="LINUXMOUNT" | head 1 | eval UsePct=rtrim(UsePct, "%") | table UsePct</query>
+          <query>earliest=-4h latest=now index=log-lx-prod (host=LINUXSERVERNAME*) sourcetype=df | search NOT nfs NOT *cdrom* |	dedup mount |	sort -UsePct | head 1 | eval UsePct=rtrim(UsePct, "%") | table UsePct</query>
+          <earliest>0</earliest>
+          <latest></latest>
+        </search>
+        <option name="cuviz_water_gauge.water_gauge.circleColor">#795548</option>
+        <option name="cuviz_water_gauge.water_gauge.circleFillGap">0.05</option>
+        <option name="cuviz_water_gauge.water_gauge.circleThickness">0.08</option>
+        <option name="cuviz_water_gauge.water_gauge.displayPercent">true</option>
+        <option name="cuviz_water_gauge.water_gauge.height">125</option>
+        <option name="cuviz_water_gauge.water_gauge.maxValue">100</option>
+        <option name="cuviz_water_gauge.water_gauge.minValue">0</option>
+        <option name="cuviz_water_gauge.water_gauge.textColor">#045681</option>
+        <option name="cuviz_water_gauge.water_gauge.textSize">1</option>
+        <option name="cuviz_water_gauge.water_gauge.textVertPosition">.5</option>
+        <option name="cuviz_water_gauge.water_gauge.valueCountUp">true</option>
+        <option name="cuviz_water_gauge.water_gauge.waveAnimate">true</option>
+        <option name="cuviz_water_gauge.water_gauge.waveAnimateTime">50000</option>
+        <option name="cuviz_water_gauge.water_gauge.waveColor">#8e24aa</option>
+        <option name="cuviz_water_gauge.water_gauge.waveCount">1</option>
+        <option name="cuviz_water_gauge.water_gauge.waveHeight">0.1</option>
+        <option name="cuviz_water_gauge.water_gauge.waveHeightScaling">true</option>
+        <option name="cuviz_water_gauge.water_gauge.waveOffset">0</option>
+        <option name="cuviz_water_gauge.water_gauge.waveRise">true</option>
+        <option name="cuviz_water_gauge.water_gauge.waveRiseTime">1000</option>
+        <option name="cuviz_water_gauge.water_gauge.waveTextColor">#A4DBf8</option>
+        <option name="cuviz_water_gauge.water_gauge.width">125</option>
+        <option name="height">125</option>
+      </viz>\
+"""
+disk2 = """\
+      <html>
+        <a href="linux_server_disk_usage?form.time_token.earliest=-7d%40d&amp;form.time_token.latest=now&amp;form.host_token=LINUXSERVERNAME" target="Host disk">
+        <b style="color:blue;text-decoration:none;text-align:left;font-size:10px;">LINUXSERVERNAME</b> 
+        </a>
+      </html>
+      <viz type="cuviz_water_gauge.water_gauge">
+        <search>
+          <query>earliest=-4h latest=now index=log-lx-prod (host=LINUXSERVERNAME*) sourcetype=df | search NOT nfs NOT *cdrom* |	dedup mount |	sort -UsePct | head 2 | tail 1 | eval UsePct=rtrim(UsePct, "%") | table UsePct</query>
           <earliest>0</earliest>
           <latest></latest>
         </search>
@@ -178,7 +213,8 @@ bottom = """\
 """
 cpu = cpu.replace("log-lx-prod",index)
 mem = mem.replace("log-lx-prod",index)
-disk = disk.replace("log-lx-prod",index)
+disk1 = disk1.replace("log-lx-prod",index)
+disk2 = disk2.replace("log-lx-prod",index)
 
 print("Input server name and press enter twice when done.\n")
 
@@ -192,10 +228,9 @@ try:
                 str = str[0:str.find(".")]
             cpulines.append(cpu.replace("LINUXSERVERNAME",str))
             memlines.append(mem.replace("LINUXSERVERNAME",str))
-            disk1lines.append(disk.replace("LINUXSERVERNAME",str).replace("LINUXMOUNT",mount1))
-            if len(mount2) > 0:
-                print(len(mount2))
-                disk2lines.append(disk.replace("LINUXSERVERNAME",str).replace("LINUXMOUNT",mount2))
+            disk1lines.append(disk1.replace("LINUXSERVERNAME",str))
+            #if len(mount2) > 0:
+            disk2lines.append(disk2.replace("LINUXSERVERNAME",str))
 except EOFError:
     pass
 
@@ -206,6 +241,7 @@ disk1lines = "\n".join(disk1lines)
 if len(disk2lines) > 0:
     disk2lines = "\n".join(disk2lines)
 
-top = top.replace("MOUNT1",mount1).replace("MOUNT2",mount2)
+#top = top.replace("MOUNT1",mount1).replace("MOUNT2",mount2)
 
 print(top,cpulines,panel,memlines,panel,disk1lines,panel,disk2lines,bottom)
+
