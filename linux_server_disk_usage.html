@@ -1,6 +1,6 @@
 <form>
   <label>Linux Server Disk Usages</label>
-  <fieldset submitButton="true">
+  <fieldset submitButton="true" autoRun="true">
     <input type="time" token="time_token" searchWhenChanged="true">
       <label>Time Period</label>
       <default>
@@ -11,23 +11,16 @@
     <input type="text" token="host_token" searchWhenChanged="false">
       <label>Server Name</label>
       <default>lx00001</default>
-      <suffix></suffix>
-    </input>
-    <input type="text" token="mount_token" searchWhenChanged="true">
-      <label>Mount</label>
-      <default>/</default>
+      <suffix/>
     </input>
   </fieldset>
   <row>
     <panel>
-     <html>
+      <html>
         <style>.btn-primary { margin: 5px 10px 5px 0; }</style>
-        <a href="linux_server_cpu_usages?form.host_token=$host_token$*" target="_self"
-        class="btn btn-primary">CPU</a>
-		<a href="linux_server_memory_usage?form.host_token=$host_token$*" target="_self"
-        class="btn btn-primary">Memory</a>
-        <a href="linux_server_disk_usage?form.host_token=$host_token$*" target="_self"
-        class="btn btn-primary">Disk</a>  	
+        <a href="linux_server_cpu_usages?form.host_token=$host_token$" target="_self" class="btn btn-primary">CPU</a>
+		<a href="linux_server_memory_usage?form.host_token=$host_token$" target="_self" class="btn btn-primary">Memory</a>
+        <a href="linux_server_disk_usage?form.host_token=$host_token$" target="_self" class="btn btn-primary">Disk</a>  	
       </html>
     </panel>
   </row>
@@ -36,15 +29,30 @@
       <table>
         <title>All Mounts</title>
         <search>
-          <query>index="log-lx-prod" sourcetype=df host=$host_token$* storage_free_percent&lt;90 earliest=-60m| rex field=host mode=sed "s/\..*\..*//g"|search NOT nfs NOT *cdrom* | dedup host, mount | sort storage_free_percent | eval "Storage Used" = (100-storage_free_percent) | eval Server= host."-".mount|table  Server, "Storage Used"</query>
-          <earliest>$time_token.earliest$</earliest>
-          <latest>$time_token.latest$</latest>
+          <query>index="log-lx-prod" sourcetype=df host=$host_token$*  earliest=-2h| rex field=host mode=sed "s/\..*\..*//g"|search NOT nfs NOT *cdrom* | dedup host, mount | sort storage_free_percent | eval "Storage Used %" = (100-storage_free_percent) |table host, mount, "Storage Used %", Avail, Used</query>
+          <earliest>-4h@m</earliest>
+          <latest>now</latest>
         </search>
+        <format type="number" field="Storage Used %">
+          <option name="precision">0</option>
+          <option name="unit">%</option>
+        </format>
       </table>
     </panel>
   </row>
   <row>
     <panel>
+      <input type="dropdown" token="mount_token" searchWhenChanged="true">
+        <label>Mount</label>
+        <fieldForLabel>mount</fieldForLabel>
+        <fieldForValue>mount</fieldForValue>
+        <search>
+          <query>index="log-lx-prod" sourcetype=df host=$host_token$* earliest=-2h |search NOT nfs NOT *cdrom* | dedup host, mount | sort storage_free_percent |table mount</query>
+          <earliest>-4h@m</earliest>
+          <latest>now</latest>
+        </search>
+        <default>/</default>
+      </input>
       <chart>
         <title>$mount_token$</title>
         <search>
