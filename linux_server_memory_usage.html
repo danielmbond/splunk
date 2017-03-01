@@ -3,27 +3,24 @@
   <description>Provides detail view of Memory usage of a VM</description>
   <fieldset submitButton="true">
     <input type="time" token="time_token">
-    <label></label>
-    <default>
-      <earliest>-1d@d</earliest>
-      <latest>now</latest>
-    </default>
+      <label></label>
+      <default>
+        <earliest>-1d@d</earliest>
+        <latest>now</latest>
+      </default>
     </input>
     <input type="text" token="host_token">
-    <label>Host</label>
-    <default>lx02012</default>
+      <label>Host</label>
+      <default>lx02012</default>
     </input>
   </fieldset>
   <row>
     <panel>
-     <html>
+      <html>
         <style>.btn-primary { margin: 5px 10px 5px 0; }</style>
-        <a href="linux_server_cpu_usages?form.host_token=$host_token$" target="_self"
-        class="btn btn-primary">CPU</a>
-		<a href="linux_server_memory_usage?form.host_token=$host_token$" target="_self"
-        class="btn btn-primary">Memory</a>
-        <a href="linux_server_disk_usage?form.host_token=$host_token$" target="_self"
-        class="btn btn-primary">Disk</a>  	
+        <a href="linux_server_cpu_usages?form.host_token=$host_token$" target="_self" class="btn btn-primary">CPU</a>
+		<a href="linux_server_memory_usage?form.host_token=$host_token$" target="_self" class="btn btn-primary">Memory</a>
+        <a href="linux_server_disk_usage?form.host_token=$host_token$" target="_self" class="btn btn-primary">Disk</a>  	
       </html>
     </panel>
   </row>
@@ -118,7 +115,7 @@
       <chart>
         <title>Current #Process and #Thread vs CPUload</title>
         <search>
-          <query>earliest=-1h@h latest=now index=log-lx-prod host=$host_token$* sourcetype=vmstat| bucket _time span=1m | stats max(processes) as #Process,max(threads) as #Thread,max(loadAvg1mi) as CPUload by _time</query>
+          <query>earliest=-1h@h latest=now index=log-lx-prod host=$host_token$* sourcetype=vmstat OR sourcetype=cpu |eval cpupct=100-pctIdle| bucket _time span=1m | stats max(processes) as #Process,max(threads) as #Thread,avg(cpupct) as CPUload by _time</query>
           <earliest>0</earliest>
           <latest></latest>
         </search>
@@ -182,8 +179,8 @@
   <row>
     <panel>
       <input type="text" token="span2" searchWhenChanged="true">
-      <label>Set Granularity(minutes)</label>
-      <default>5</default>
+        <label>Set Granularity(minutes)</label>
+        <default>5</default>
       </input>
       <chart>
         <title>Memory usgaes for host $host_token$</title>
@@ -225,12 +222,12 @@
   <row>
     <panel>
       <input type="dropdown" token="Agg_token" searchWhenChanged="true">
-      <label>Aggregation</label>
-      <choice value="avg">Average</choice>
-      <choice value="max">Maximum</choice>
-      <choice value="mean">Mean</choice>
-      <choice value="perc95">95th Percentile</choice>
-      <default>avg</default>
+        <label>Aggregation</label>
+        <choice value="avg">Average</choice>
+        <choice value="max">Maximum</choice>
+        <choice value="mean">Mean</choice>
+        <choice value="perc95">95th Percentile</choice>
+        <default>avg</default>
       </input>
       <chart>
         <title>Last 7 days Average Memory Usages of $host_token$</title>
