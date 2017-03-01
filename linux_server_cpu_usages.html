@@ -1,5 +1,5 @@
 <form>
-  <label>Server CPU Usages</label>
+  <label>Linux Server CPU Usage</label>
   <description>Provides detail view of CPU usage of a VM</description>
   <fieldset submitButton="true">
     <input type="time" token="time_token">
@@ -85,7 +85,7 @@
       <chart>
         <title>#Process and #Threads vs CPUload</title>
         <search>
-          <query>earliest=-1h@h latest=now index=log-lx-prod host=$host_token$* sourcetype=vmstat | bucket _time span=1m | stats max(processes) as #Process,max(threads) as #Thread,max(loadAvg1mi) as CPUload by _time</query>
+          <query>earliest=-1h@h latest=now index=log-lx-prod host=$host_token$* sourcetype=vmstat OR sourcetype=cpu |eval cpupct=100-pctIdle| bucket _time span=1m | stats max(processes) as #Process,max(threads) as #Thread,avg(cpupct) as CPUload by _time</query>
           <earliest>0</earliest>
           <latest></latest>
         </search>
